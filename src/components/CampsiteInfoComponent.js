@@ -16,6 +16,7 @@ import {
 } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import { LocalForm, Control, Errors } from 'react-redux-form';
+import { Loading } from './LoadingComponent';
 
 const required = val => val && val.length;
 const maxLength = len => val => !val || val.length <= len;
@@ -37,8 +38,12 @@ class CommentForm extends Component {
 		this.handleSubmit = this.handleSubmit.bind(this);
 	}
 	handleSubmit(values) {
-		console.log('Current state is: ' + JSON.stringify(values));
-		alert('Current state is: ' + JSON.stringify(values));
+		this.props.addComment(
+			this.props.campsiteId,
+			values.rating,
+			values.author,
+			values.text
+		);
 	}
 	toggleModal = () => {
 		this.setState({
@@ -47,11 +52,17 @@ class CommentForm extends Component {
 	};
 	render() {
 		return (
-			<div className="col-md-5 m-1">
-				<Button outline className="secondary fa-lg" onClick={this.toggleModal}>
-					<i className="fa fa-pencil" />
-					Submit Comment
-				</Button>
+			<React.Fragment>
+				<Col md={{ size: 10, offset: 5 }}>
+					<Button
+						outline
+						className="secondary fa-lg"
+						onClick={this.toggleModal}
+					>
+						<i className="fa fa-pencil" />
+						Submit Comment
+					</Button>
+				</Col>
 				<Modal isOpen={this.state.isOpen} isToggle={this.state.isToggle}>
 					<ModalHeader isToggle={this.state.isToggle}>
 						Submit Comment
@@ -142,7 +153,7 @@ class CommentForm extends Component {
 						</LocalForm>
 					</ModalBody>
 				</Modal>
-			</div>
+			</React.Fragment>
 		);
 	}
 }
@@ -158,7 +169,7 @@ function RenderCampsite({ campsite }) {
 		</div>
 	);
 }
-function RenderComments({ comments }) {
+function RenderComments({ comments, addComment, campsiteId }) {
 	if (comments) {
 		return (
 			<div className="col-md-5 m-1">
@@ -178,6 +189,7 @@ function RenderComments({ comments }) {
 						</div>
 					);
 				})}
+				<CommentForm campsiteId={campsiteId} addComment={addComment} />
 			</div>
 		);
 	}
@@ -185,6 +197,26 @@ function RenderComments({ comments }) {
 }
 
 function CampsiteInfo(props) {
+	if (props.isLoading) {
+		return (
+			<div className="container">
+				<div className="row">
+					<Loading />
+				</div>
+			</div>
+		);
+	}
+	if (props.errMess) {
+		return (
+			<div className="container">
+				<div className="row">
+					<div className="col">
+						<h4>{props.errMess}</h4>
+					</div>
+				</div>
+			</div>
+		);
+	}
 	if (props.campsite) {
 		return (
 			<div className="container">
@@ -202,10 +234,11 @@ function CampsiteInfo(props) {
 				</div>
 				<div className="row">
 					<RenderCampsite campsite={props.campsite} />
-					<RenderComments comments={props.comments} />
-				</div>
-				<div className="row">
-					<CommentForm />
+					<RenderComments
+						comments={props.comments}
+						addComment={props.addComment}
+						campsiteId={props.campsite.id}
+					/>
 				</div>
 			</div>
 		);
